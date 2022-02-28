@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplicação de Games</title>
+</head>
+
+<body>
+  <h4>Formulário de Login</h4>
+  <h4 id="status"></h4>
+  <div><label for="">Email:</label><input type="text" name="name" id="email"></div>
+  <div><label for="">Senha:</label><input type="text" name="price" id="password"></div>
+  <button onClick="login()">Logar</button>
+
+  <h4>List games</h4>
+  <ul id="listGames"></ul>
+  <hr>
+  <h4>Create games</h4>
+  <div><label for="">Name:</label><input type="text" name="name" id="name"></div>
+  <div><label for="">Price:</label><input type="text" name="price" id="price"></div>
+  <div><label for="">Year:</label><input type="text" name="name" id="year"></div>
+  <div><label for="">ID:</label><input type="text" name="id_game" id="id_game"></div>
+  <button onClick="createGame()">Criar</button>
+
+  <hr>
+  <h4>Edit games</h4>
+  <div><label for="">Name:</label><input type="text" name="name" id="name_edit"></div>
+  <div><label for="">Price:</label><input type="text" name="price" id="price_edit"></div>
+  <div><label for="">Year:</label><input type="text" name="name" id="year_edit"></div>
+  <div><label for="">ID:</label><input type="text" name="id_game" id="id_edit"></div>
+  <button onClick="editGame(document.querySelector('#id_edit').value)">Editar</button>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  function verificaStatus() {
+    if (localStorage.getItem('token')) {
+      document.querySelector('#status').innerHTML = 'Você está logado';
+    } else {
+      document.querySelector('#status').innerHTML = 'Você não está logado';
+    }
+  }
+
+  verificaStatus()
+
+  function login() {
+    const email = getFieldValue('email'), password = getFieldValue('password');
+
+    axios.post('http://localhost:8080/auth', {
+      email,
+      password
+    }).then(res => {
+      const { data } = res;
+      localStorage.setItem('token', data.token);
+      if (localStorage.getItem('token')) {
+        document.querySelector('#status').innerHTML = 'Você está logado';
+      }
+    }).catch(err => {
+      console.log(err);
+    })
+  }
+
+  function deleteItem(id) {
+    axios.delete(`http://localhost:8080/game/${id}`).then(res => {
+      console.log(res)
+      document.location.reload(true)
+    }).catch(res => {
+      console.log(res)
+    })
+  }
+
+  function putTheValueInFields({ id, name, price, year }) {
+    document.querySelector('#id_edit').value = id
+    document.querySelector('#name_edit').value = name
+    document.querySelector('#price_edit').value = price
+    document.querySelector('#year_edit').value = year
+  }
+
+  function editGame(id) {
+    axios.put(`http://localhost:8080/game/${id}`, {
+      name: document.querySelector('#name_edit').value,
+      year: document.querySelector('#year_edit').value,
+      price: document.querySelector('#price_edit').value
+    }).then(res => {
+      if (res.status === 200) {
+        document.location.reload(true)
+      }
+    }).catch(res => {
+      console.log(res);
+    })
+  }
+
+  axios.get('http://localhost:8080/games', {
+    headers: {
+      Authorization: localStorage.getItem('token')
+    }
+  })
+    .then(res => {
+      const listGames = document.querySelector('#listGames');
+
+      res.data.forEach(item => {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        const editButton = document.createElement('button');
+
+        li.innerHTML = `Nome: ${item.name} - Preço: ${item.price} - Ano: ${item.year}`;
+        li.setAttribute('data-id', item.id)
+        li.setAttribute('data-name', item.name)
+        li.setAttribute('data-price', item.price)
+        li.setAttribute('data-year', item.year)
+
+        button.innerText = 'Delete'
+        editButton.innerText = 'Edit Game'
+
+        li.appendChild(button);
+        li.appendChild(editButton);
+        listGames.appendChild(li);
+
+        button.addEventListener('click', () => deleteItem(item.id))
+        editButton.addEventListener('click', () => putTheValueInFields(item))
+      })
+
+    }).catch(error => {
+      console.log(error)
+    })
+
+  function getFieldValue(id) {
+    return document.querySelector(`#${id}`).value;
+  }
+
+  function createGame() {
+    const name = getFieldValue('name'), year = getFieldValue('year'), price = getFieldValue('price');
+    console.log(localStorage.getItem('token'));
+
+    const headers = {
+      'content-Type': 'application/json',
+      'authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+
+    axios.post('http://localhost:8080/game', {
+      id: Math.round(Math.random() * 100),
+      name,
+      year,
+      price
+    }, headers).then(res => {
+      alert('criado com sucesso')
+      document.location.reload(true)
+    }).catch(err => {
+      console.log('houve algum erro')
+    })
+  }
+</script>
+
+</html>
