@@ -44,12 +44,18 @@
     }
   }
 
+  const headers = {
+      headers: {
+        authorization: localStorage.getItem('token')
+      }
+    }
+
   verificaStatus()
 
   function login() {
     const email = getFieldValue('email'), password = getFieldValue('password');
 
-    axios.post('http://localhost:8080/auth', {
+    axios.post('http://localhost:8000/auth', {
       email,
       password
     }).then(res => {
@@ -64,7 +70,7 @@
   }
 
   function deleteItem(id) {
-    axios.delete(`http://localhost:8080/game/${id}`).then(res => {
+    axios.delete(`http://localhost:8000/game/${id}`).then(res => {
       console.log(res)
       document.location.reload(true)
     }).catch(res => {
@@ -80,7 +86,7 @@
   }
 
   function editGame(id) {
-    axios.put(`http://localhost:8080/game/${id}`, {
+    axios.put(`http://localhost:8000/game/${id}`, {
       name: document.querySelector('#name_edit').value,
       year: document.querySelector('#year_edit').value,
       price: document.querySelector('#price_edit').value
@@ -93,11 +99,7 @@
     })
   }
 
-  axios.get('http://localhost:8080/games', {
-    headers: {
-      Authorization: localStorage.getItem('token')
-    }
-  })
+  axios.get('http://localhost:8000/games', headers)
     .then(res => {
       const listGames = document.querySelector('#listGames');
 
@@ -135,12 +137,7 @@
     const name = getFieldValue('name'), year = getFieldValue('year'), price = getFieldValue('price');
     console.log(localStorage.getItem('token'));
 
-    const headers = {
-      'content-Type': 'application/json',
-      'authorization': `Bearer ${localStorage.getItem('token')}`
-    }
-
-    axios.post('http://localhost:8080/game', {
+    axios.post('http://localhost:8000/game', {
       id: Math.round(Math.random() * 100),
       name,
       year,
